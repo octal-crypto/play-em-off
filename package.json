@@ -1,0 +1,6 @@
+{
+  "name": "play-em-off",
+  "dependencies": {
+    "selenium-webdriver": "^4.28.1"
+  }
+}
