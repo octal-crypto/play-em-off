@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const chrome = require('selenium-webdriver/chrome');
-const { Builder, By } = require('selenium-webdriver');
+const { Builder, By, Key } = require('selenium-webdriver');
 
 // This script monitors farcaster mentions, and 
 // 'quote casts' the parent with a keycat video.
@@ -14,6 +14,7 @@ async function main() {
 
   // Start a browser
   const options = new chrome.Options();
+  options.addArguments('--no-sandbox');
   options.addArguments(`--user-data-dir=${path.join(__dirname, 'chrome')}`);
   const driver = await new Builder().setChromeOptions(options).build();
 
@@ -91,16 +92,17 @@ async function cast(driver, username, hash) {
 
   // Go to warpcast
   await driver.get('https://warpcast.com');
-  await driver.sleep(3000);
+  await driver.sleep(5000);
 
   // Start a cast
   const castButton = await driver.findElement(By.xpath('//button[text()="Cast"]'));
   await castButton.click();
-  await driver.sleep(1000);
+  await driver.sleep(2000);
 
-  // Type the URL we're quoting
-  const actions = driver.actions();
-  await actions.sendKeys(`https://warpcast.com/${username}/${hash}`).perform();
+  // Enter the URL we're quoting.
+  const url = `https://warpcast.com/${username}/${hash}`;
+  await driver.executeScript(`navigator.clipboard.writeText(arguments[0])`, url);
+  await driver.actions().keyDown(Key.CONTROL).sendKeys('v').keyUp(Key.CONTROL).perform();
   await driver.sleep(500);
 
   // Upload the video
@@ -114,7 +116,7 @@ async function cast(driver, username, hash) {
 
   // Submit the cast
   await submitButton.click();
-  await driver.sleep(3000);
+  await driver.sleep(2000);
 }
 
 main().catch(e => { console.error(e); process.exitCode = 1; });
